@@ -9,13 +9,15 @@ class Client():
     def __init__(self, top):
         self.client_socket = socket(AF_INET, SOCK_STREAM)
 
-        self.HOST = '127.0.0.1'
+        self.HOST = 'ec2-54-173-78-53.compute-1.amazonaws.com'
         self.PORT = 9999
 
         self.BUFF = 1024
         self.ADDR = (self.HOST, self.PORT)
 
+        print("trying to connect")
         self.client_socket.connect(self.ADDR)
+        print("Connected")
         receive_thread = Thread()
         receive_thread.start()
 

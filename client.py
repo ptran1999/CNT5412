@@ -9,6 +9,8 @@ class Client():
     def __init__(self, top):
         self.client_socket = socket(AF_INET, SOCK_STREAM)
 
+        #self.HOST = '127.0.0.1'
+
         self.HOST = 'ec2-54-173-78-53.compute-1.amazonaws.com'
         self.PORT = 9999
 
@@ -18,8 +20,6 @@ class Client():
         print("trying to connect")
         self.client_socket.connect(self.ADDR)
         print("Connected")
-        receive_thread = Thread()
-        receive_thread.start()
 
         self.top = top
 
@@ -73,9 +73,6 @@ class Client():
                 self.msg_list.insert(END, msg)
             except OSError:  # Possibly client has left the chat.
                 break
-
-    def delete_screen(self, x):
-        x.destroy()
 
 
 if __name__ == "__main__":

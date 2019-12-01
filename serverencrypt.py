@@ -33,7 +33,8 @@ ADDRESS = {}
 ONLINE_USERS = {}
 
 HOST = '127.0.0.1'
-PORT = 9983
+# PORT = 9984
+PORT = int(input("\nPort: "))
 BUFF = 1024
 ADDR = (HOST, PORT)
 
@@ -48,7 +49,6 @@ def accept_connections():
         client_socket, client_address = SERVER.accept()
         print("{}:{} connected.". format(client_address[0], client_address[1]))
         ADDRESS[client_socket] = client_address
-
         print("Waiting for public key & public key hash\n")
         # Obtains client's public key
         getpbk = client_socket.recv(BUFF)
@@ -97,6 +97,7 @@ def decrypt(msg, key):
     plaintext = remove_padding(str(des_cipher.decrypt(msg)))
     return plaintext
 
+
 def padding(s):
     return s + ((8 - len(s) % 8) * '`')
 
@@ -116,26 +117,32 @@ def handle_client(client, key):
     sleep(.5)
     # broadcast(msg)
     while 1:
-        ciphertext = client.recv(BUFF)
-        plaintext = decrypt(ciphertext, key)
-        print("\n[!] Plaintext message from client: " + str(plaintext))
-        if plaintext != "QUIT":
-            broadcast(str(ciphertext), name + ": ")
-            # broadcast(msg, name + ": ")
-        else:
-            close_connection(client)
+        try:
+            ciphertext = client.recv(BUFF)
+            if ciphertext != "":
+                plaintext = decrypt(ciphertext, key)
+                print("\n[!]" + name + ": " + str(plaintext))
+                if plaintext != "QUIT":
+                    client.send(ciphertext)
+                # broadcast(str(ciphertext), str(name) + ": ")
+                # broadcast(msg, name + ": ")
+            else:
+                close_connection(client)
+        except OSError:
             break
+
 
 #Broadcast msg to chat room
 #Prefix is (name + ": ")
 def broadcast(msg, prefix=""):
     sent_message = "{}{}".format(prefix, msg)
-    print("\n[!] Your plaintext message \n" + sent_message)
+    # print("\n[!] Your plaintext message \n" + sent_message)
     try:
         for client in ONLINE_USERS:
             client.send(bytes(sent_message, 'utf8'))
     except:
         pass
+
 
 def close_connection(client):
     client.send(bytes("QUIT", 'utf8'))

@@ -32,7 +32,8 @@ ONLINE_USERS = {}
 skey_l = {}
 
 HOST = '127.0.0.1'
-PORT = 9999
+# PORT = 9995
+PORT = int(input("\nPort: "))
 BUFF = 1024
 ADDR = (HOST, PORT)
 
@@ -94,7 +95,7 @@ def accept_connections():
 
 def decrypt(msg, key):
     des_cipher = DES.new(key, DES.MODE_CBC, key)
-    plaintext = remove_padding(str(des_cipher.decrypt(msg)))
+    plaintext = remove_padding((des_cipher.decrypt(msg)).decode('utf8'))
     return plaintext
 
 
@@ -109,26 +110,26 @@ def remove_padding(s):
 # decode client messages
 def handle_client(client, key):
     name = ONLINE_USERS[client].decode('utf8')
-
     sleep(.5)
 
     while 1:
         ciphertext = client.recv(BUFF)
+        # ciphertext = ciphertext.decode('latin-1')
+        if ciphertext != "":
+            plaintext = decrypt(ciphertext, key)
 
-        plaintext = decrypt(ciphertext, key)
+            print("Cipher message from client: " + str(ciphertext))
+            print("Plain message from client: " + plaintext)
+            CBCencrypt = DES.new(skey_l[name.encode('utf8')], DES.MODE_CBC, skey_l[name.encode('utf8')])
+            e_msg = CBCencrypt.encrypt((padding(plaintext)).encode('utf8'))
 
-        print("Cipher message from client: " + str(ciphertext))
-        print("Plain message from client: " + str(plaintext))
+            if plaintext != "QUIT":
+                print("Encrypted message to client: " + str(e_msg))
+                broadcast(e_msg)
+            else:
+                close_connection(client)
+                break
 
-        CBCencrypt = DES.new(skey_l[name.encode('utf8')], DES.MODE_CBC, skey_l[name.encode('utf8')])
-        e_msg = CBCencrypt.encrypt(padding(plaintext))
-
-        if plaintext != "QUIT":
-            print("Encrypted message to client: " + str(e_msg))
-            broadcast(e_msg)
-        else:
-            close_connection(client)
-            break
 
 
 #Broadcast msg to chat room
@@ -139,7 +140,6 @@ def broadcast(msg):
         client.send(msg)
 
 
-
 def close_connection(client):
     client.send(bytes("QUIT", 'utf8'))
     print("{}:{} disconnected.".format(ADDRESS[client][0], ADDRESS[client][1]))
@@ -147,7 +147,6 @@ def close_connection(client):
     client.close()
     del ADDRESS[client]
     del ONLINE_USERS[client]
-
 
 if __name__ == "__main__":
     SERVER.listen(10)

@@ -25,8 +25,8 @@ class Client():
         self.HOST = '127.0.0.1'
 
         # self.HOST = 'ec2-54-173-78-53.compute-1.amazonaws.com'
-        self.PORT = 9999
-
+        # self.PORT = 9995
+        self.PORT = int(input("\nPort: "))
         self.BUFF = 1024
         self.ADDR = (self.HOST, self.PORT)
 
@@ -69,7 +69,9 @@ class Client():
         # Generate session key and send to server
         if getpbk != "":
             print("\n Making session key.\n")
-            self.key_56 = os.urandom(KEY_SIZE)
+            # self.key_56 = os.urandom(KEY_SIZE)
+            self.key_56 = input("\nPassword: ").encode('utf8')
+            # self.key_56 = "abcdefgh".encode('utf8')
             print("\nLength of IV = " + str(len(self.key_56)))
             print("\nSession key = " + str(self.key_56))
 
@@ -90,8 +92,6 @@ class Client():
 
         self.messages_frame = Frame(self.top)
         myFont = font.Font(family='Helvetica', size=int(x / 70))
-
-
 
         self.my_msg = StringVar()
         self.my_msg.set("Enter message...")
@@ -118,7 +118,7 @@ class Client():
 
         # Enter button for sending
         entry_field.bind("<Return>",
-                         lambda send: (self.send(str_msg, self.key_56), sleep(.1), entry_field.delete('0', 'end')))
+                         lambda send: (self.send(), sleep(.1), entry_field.delete('0', 'end')))
         entry_field.pack(side=LEFT, fill=BOTH, expand=1)
 
         # Send button
@@ -127,20 +127,20 @@ class Client():
                              bg='#484c52', fg='#c8c9cb')
         send_button.pack(ipadx=5, ipady=5, side=RIGHT, fill=BOTH)
 
-    def send(self, msg, key, event=None):
-        if msg == "QUIT":
-            os._exit(0)
-
+    def send(self):
         check_msg = self.my_msg.get()
+        if check_msg == "QUIT":
+            os._exit(0)
         if check_msg != "Enter message...":
             msg = check_msg
             msg = self.alias + ": " + msg
-            print("Plain message from server: " + msg)
+            print(msg)
+            print(check_msg)
         sleep(.5)
 
-
-        cipher = DES.new(key, DES.MODE_CBC, key)
-        ciphertext = cipher.encrypt(self.padding(msg))
+        cipher = DES.new(self.key_56, DES.MODE_CBC, self.key_56)
+        ciphertext = cipher.encrypt((self.padding(check_msg)).encode('utf8'))
+        # ciphertext = cipher.encrypt(self.padding(msg))
         print("Encrypted message to server: " + str(ciphertext))
         self.client_socket.send(ciphertext)
 
@@ -150,7 +150,7 @@ class Client():
                 msg = self.client_socket.recv(self.BUFF)
                 print("Encrypted message from server: " + str(msg))
                 d_Msg = self.decrypt(msg, self.key_56)
-                print("Plain message from server: " + str(d_Msg))
+                print("Plaintext message from server: " + str(d_Msg))
                 Pr_Msg = d_Msg[4:-2]
                 self.msg_list.insert(END, Pr_Msg)
             except OSError:  # Possibly client has left the chat.
@@ -172,7 +172,7 @@ class Client():
 
     def decrypt(self, msg, key):
         des_cipher = DES.new(key, DES.MODE_CBC, key)
-        plaintext = self.remove_padding(str(des_cipher.decrypt(msg)))
+        plaintext = self.remove_padding((des_cipher.decrypt(msg)).decode('utf8'))
         return plaintext
 
 if __name__ == "__main__":

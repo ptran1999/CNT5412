@@ -19,7 +19,6 @@ random_generator = Random.new().read
 RSAkey = RSA.generate(1024, random_generator)
 public_key = RSAkey.publickey().exportKey()
 private_key = RSAkey.exportKey()
-priv_key_obj = RSA.importKey(private_key)
 
 # Generate hash of public RSA server key
 # hash_object = hashlib.sha1(public_key)
@@ -32,8 +31,8 @@ ONLINE_USERS = {}
 skey_l = {}
 
 HOST = '127.0.0.1'
-# PORT = 9995
-PORT = int(input("\nPort: "))
+PORT = 9995
+# PORT = int(input("\nPort: "))
 BUFF = 1024
 ADDR = (HOST, PORT)
 
@@ -109,18 +108,14 @@ def remove_padding(s):
 
 # decode client messages
 def handle_client(client, key):
-    name = ONLINE_USERS[client].decode('utf8')
-    sleep(.5)
-
     while 1:
         ciphertext = client.recv(BUFF)
-        # ciphertext = ciphertext.decode('latin-1')
         if ciphertext != "":
             plaintext = decrypt(ciphertext, key)
 
             print("Cipher message from client: " + str(ciphertext))
             print("Plain message from client: " + plaintext)
-            CBCencrypt = DES.new(skey_l[name.encode('utf8')], DES.MODE_CBC, skey_l[name.encode('utf8')])
+            CBCencrypt = DES.new(key, DES.MODE_CBC, key)
             e_msg = CBCencrypt.encrypt((padding(plaintext)).encode('utf8'))
 
             if plaintext != "QUIT":
@@ -134,7 +129,6 @@ def handle_client(client, key):
 
 #Broadcast msg to chat room
 #Prefix is (name + ":")
-
 def broadcast(msg):
     for client in ONLINE_USERS:
         client.send(msg)

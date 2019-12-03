@@ -25,8 +25,8 @@ class Client():
         self.HOST = '127.0.0.1'
 
         # self.HOST = 'ec2-54-173-78-53.compute-1.amazonaws.com'
-        # self.PORT = 9995
-        self.PORT = int(input("\nPort: "))
+        self.PORT = 9995
+        # self.PORT = int(input("\nPort: "))
         self.BUFF = 1024
         self.ADDR = (self.HOST, self.PORT)
 

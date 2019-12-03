@@ -89,71 +89,79 @@ def decrypt(msg, key):
     return plaintext
 
 
-# """ GUI """
-#
-# root = Tk()
-# root.title("ALICE AND BOB")
-# x = int(root.winfo_screenwidth() / 1.5)
-# y = int(root.winfo_screenwidth() / 2.67)
-# root.geometry(str(x) + 'x' + str(y))
-#
-# messages_frame = Frame(root)
-# myFont = font.Font(family='Helvetica', size=int(x / 70))
-#
-# my_msg = StringVar()
-# my_msg.set("Enter message...")
-#
-# scrollbar1 = Scrollbar(messages_frame)  # To navigate through past messages.
-#
-# # Following will contain the messages.
-# msg_list = Listbox(messages_frame, yscrollcommand=scrollbar1.set, height=20, width=75)
-# msg_list.config(font=myFont, bg='#36393f', fg='#c8c9cb')
-# scrollbar1.pack(side=RIGHT, fill=Y)
-# msg_list.pack(side=TOP, fill=BOTH, expand=1)
-# messages_frame.pack(side=RIGHT, fill=BOTH, expand=1)
-#
-# # User input field and entry button
-# entry_field = Entry(messages_frame, textvariable=my_msg, font=myFont, insertbackground='#c8c9cb',
-#                     bg='#484c52', fg='#c8c9cb')
-# entry_field.bind("<FocusIn>", lambda args: entry_field.delete('0', 'end'))
-# if my_msg.get() != "Enter message...":
-#     str_msg = my_msg.get()
-# else:
-#     str_msg = ""
-#
-# # Enter button for sending
-# entry_field.pack(side=LEFT, fill=BOTH, expand=1)
-#
-# # Send button
-# send_button = Button(messages_frame, font=myFont, text="Send",
-#                      command=lambda: send(str_msg),
-#                      bg='#484c52', fg='#c8c9cb')
-# send_button.pack(ipadx=5, ipady=5, side=RIGHT, fill=BOTH)
-
-
 """ SEND & RECEIVE MESSAGE """
 
 
-def send(msg):
-    s_msg = encrypt(msg, key_56)
-    Alice.send(s_msg)
-    print("Alice encrypted message: ", s_msg)
-    # Pr_Msg = "Alice encrypted message: " + str(s_msg)
-    # msg_list.insert(END, Pr_Msg)
+def send():
+    msg = my_msg.get()
+    if msg != "QUIT":
+        # encrypt and send the message
+        s_msg = encrypt(msg, key_56)
+        Alice.send(s_msg)
+
+        # Put in the GUI
+        Pr_Msg = "Alice encrypted message: " + str(s_msg)
+        msg_list.insert(END, Pr_Msg)
+    else:
+        s_msg = encrypt("Alice has quit!", key_56)
+        Alice.send(s_msg)
+        root.destroy()
+
 
 def recv():
-    msg = Alice.recv(1024)
-    r_msg = decrypt(msg, key_56)
-    print("Bob encrypted message:", msg)
-    print("Bob: ", r_msg)
-    # Pr_Msg = "Bob encrypted message:" + str(msg)
-    # msg_list.insert(END, Pr_Msg)
-    # Pr_Msg = "Bob: " + str(r_msg)
-    # msg_list.insert(END, Pr_Msg)
+    while 1:
+        # receive and decrypt message
+        msg = Alice.recv(1024)
+        r_msg = decrypt(msg, key_56)
 
-# Start chatting part
-while 1:
-    recv()
-    msg = input(">> ")
-    send(msg)
-    # root.mainloop()
+        # Put in the GUI
+        Pr_Msg = "Bob encrypted message:" + str(msg)
+        msg_list.insert(END, Pr_Msg)
+        Pr_Msg = "Bob: " + str(r_msg)
+        msg_list.insert(END, Pr_Msg)
+
+
+""" GUI """
+
+root = Tk()
+root.title("ALICE")
+x = int(root.winfo_screenwidth() / 1.5)
+y = int(root.winfo_screenwidth() / 2.67)
+root.geometry(str(x) + 'x' + str(y))
+messages_frame = Frame(root)
+myFont = font.Font(family='Helvetica', size=int(x / 70))
+my_msg = StringVar()
+my_msg.set("Enter message...")
+
+scrollbar1 = Scrollbar(messages_frame)  # To navigate through past messages.
+
+# Following will contain the messages.
+msg_list = Listbox(messages_frame, yscrollcommand=scrollbar1.set, height=20, width=75)
+msg_list.config(font=myFont, bg='#36393f', fg='#c8c9cb')
+scrollbar1.pack(side=RIGHT, fill=Y)
+msg_list.pack(side=TOP, fill=BOTH, expand=1)
+messages_frame.pack(side=RIGHT, fill=BOTH, expand=1)
+
+Thread(target=recv).start()
+
+# User input field and entry button
+entry_field = Entry(messages_frame, textvariable=my_msg, font=myFont, insertbackground='#c8c9cb',
+                    bg='#484c52', fg='#c8c9cb')
+entry_field.bind("<FocusIn>", lambda args: entry_field.delete('0', 'end'))
+if my_msg.get() != "Enter message...":
+     str_msg = my_msg.get()
+else:
+     str_msg = ""
+
+# Enter button for sending
+entry_field.bind("<Return>",
+                         lambda send: (send(), sleep(.1), entry_field.delete('0', 'end')))
+entry_field.pack(side=LEFT, fill=BOTH, expand=1)
+
+# Send button
+send_button = Button(messages_frame, font=myFont, text="Send", command=lambda: send(), bg='#484c52', fg='#c8c9cb')
+send_button.pack(ipadx=5, ipady=5, side=RIGHT, fill=BOTH)
+
+
+root.mainloop()
+
